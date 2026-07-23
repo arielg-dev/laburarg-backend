@@ -1,0 +1,19 @@
+# Entorno virtual de Python
+venv/
+
+# Archivos compilados/cache de Python
+__pycache__/
+*.pyc
+
+# Base de datos local de desarrollo
+db.sqlite3
+
+# Archivos subidos por usuarios (CVs, etc.)
+media/
+
+# Configuración local del IDE
+.idea/
+
+# Variables de entorno con datos sensibles (las vamos a usar
+# más adelante, cuando saquemos el SECRET_KEY del settings.py)
+.env

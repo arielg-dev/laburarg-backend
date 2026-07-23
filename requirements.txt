@@ -1,0 +1,5 @@
+# Backend web framework
+Django==6.0.7
+
+# Convierte los modelos de Django en API REST (JSON)
+djangorestframework==3.17.1
