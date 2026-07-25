@@ -37,12 +37,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_filters',   # <- permite filtrar resultados de la API por parámetros de URL
     'rest_framework',   # <- Django REST Framework
     'accounts',         # <- nuestra app de usuarios
     'companies',       # <- empresas y consultoras
     'jobs',            # <- búsquedas laborales
     'cvs',              # <- currículums subidos por los usuarios
     'applications',     # <- postulaciones y favoritos
+
 ]
 
 MIDDLEWARE = [
