@@ -6,29 +6,29 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 
 from companies.views import CompanyViewSet
 from jobs.views import JobViewSet
+from cvs.views import CVViewSet
+from applications.views import ApplicationViewSet, FavoriteViewSet
 
-# El DefaultRouter de DRF genera automáticamente todas las URLs
-# de un ViewSet (list, retrieve, create, update, delete), a partir
-# de un solo registro. En vez de escribir 5 líneas de "path(...)"
-# por cada modelo, escribimos una sola línea "router.register(...)".
 router = DefaultRouter()
 router.register(r"companies", CompanyViewSet, basename="company")
 router.register(r"jobs", JobViewSet, basename="job")
+router.register(r"cvs", CVViewSet, basename="cv")
+router.register(r"applications", ApplicationViewSet, basename="application")
+router.register(r"favorites", FavoriteViewSet, basename="favorite")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    # include() "engancha" todas las URLs que generó el router bajo
-    # el prefijo "api/". Por eso las rutas finales van a quedar
-    # como /api/companies/, /api/jobs/, etc.
     path("api/", include(router.urls)),
+    path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 ]
 
-# Solo en desarrollo (DEBUG=True): le decimos a Django que sirva
-# los archivos subidos (media/) directamente, para poder ver o
-# descargar un CV subido desde el navegador mientras programamos.
-# En producción esto lo va a manejar Nginx, no Django directamente.
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

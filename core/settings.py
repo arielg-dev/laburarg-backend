@@ -127,3 +127,27 @@ AUTH_USER_MODEL = 'accounts.User'
 # Configuración para archivos subidos por usuarios (media files)
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# Configuración de Django REST Framework
+REST_FRAMEWORK = {
+    # Le decimos a DRF que, para saber quién hace cada pedido,
+    # revise el header "Authorization" buscando un JWT válido.
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    # Habilita el filtrado por parámetros de URL que usamos en
+    # JobViewSet (filterset_fields), usando django-filter.
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ),
+}
+
+# Configuración específica de los tokens JWT
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    # Vida útil del access token: corta, como charlamos.
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    # Vida útil del refresh token: más larga.
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+}
