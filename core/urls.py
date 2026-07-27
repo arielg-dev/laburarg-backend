@@ -11,6 +11,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
+from accounts.views import RegisterView
 from companies.views import CompanyViewSet
 from jobs.views import JobViewSet
 from cvs.views import CVViewSet
@@ -26,6 +27,7 @@ router.register(r"favorites", FavoriteViewSet, basename="favorite")
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include(router.urls)),
+    path("api/register/", RegisterView.as_view(), name="register"),
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 ]
