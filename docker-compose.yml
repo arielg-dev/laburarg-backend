@@ -1,0 +1,72 @@
+services:
+  # ---- Base de datos MySQL ----
+  db:
+    # En vez de construir una imagen propia, usamos una ya hecha
+    # y mantenida oficialmente por MySQL en Docker Hub.
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      # Estas variables las lee la propia imagen de MySQL para
+      # auto-configurarse la primera vez que arranca: crea la
+      # base de datos y el usuario automáticamente.
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      # Un "volumen" es almacenamiento que SOBREVIVE aunque el
+      # contenedor se borre y se recree. Sin esto, cada vez que
+      # reiniciás los contenedores perderías TODOS los datos de
+      # la base -- con el volumen, MySQL guarda sus archivos en
+      # un espacio persistente que Docker administra aparte.
+      - mysql_data:/var/lib/mysql
+    ports:
+      # Mapea el puerto 3306 del contenedor al 3307 de tu máquina,
+      # por si en algún momento querés conectarte a esta base
+      # desde una herramienta externa (como MySQL Workbench).
+      - "3307:3306"
+
+  # ---- Redis (cache y cola de mensajes para Celery, más adelante) ----
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  # ---- Nuestro backend Django ----
+  web:
+    # En vez de "image" (una imagen ya hecha), usamos "build":
+    # le decimos que CONSTRUYA la imagen a partir del Dockerfile
+    # que está en esta misma carpeta (".").
+    build: .
+    restart: unless-stopped
+    # Ejecuta las migraciones automáticamente antes de levantar el
+    # servidor, cada vez que se inicia este contenedor. Práctico
+    # para desarrollo: te asegurás de nunca olvidarte de migrar.
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      # Este volumen es distinto al de MySQL: acá sincronizamos tu
+      # carpeta LOCAL del proyecto (".") con la carpeta "/app" DEL
+      # CONTENEDOR. Así, cuando edités código en PyCharm, el
+      # cambio se refleja AL INSTANTE dentro del contenedor, sin
+      # tener que reconstruir la imagen cada vez.
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=db
+    env_file:
+      # Carga el resto de las variables desde tu archivo .env real.
+      - .env
+    depends_on:
+      # Le dice a Docker Compose que levante "db" y "redis" ANTES
+      # que "web" -- Django no tendría sentido si arrancara antes
+      # que su base de datos.
+      - db
+      - redis
+
+volumes:
+  # Declaración del volumen nombrado que usamos arriba para MySQL.
+  mysql_data:
