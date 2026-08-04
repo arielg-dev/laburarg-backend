@@ -11,19 +11,26 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# django-environ: lee las variables del archivo .env y las deja
+# disponibles como si fueran variables de entorno del sistema.
+env = environ.Env()
+environ.Env.read_env(BASE_DIR / ".env")
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-us&kz5*9if8)3$bwz09l(&c-bm8xkrc3#!e#z_5-34s7*j-k66'
+SECRET_KEY = env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool("DEBUG", default=False)
 
 ALLOWED_HOSTS = []
 
@@ -82,8 +89,12 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': env("DB_NAME"),
+        'USER': env("DB_USER"),
+        'PASSWORD': env("DB_PASSWORD"),
+        'HOST': env("DB_HOST"),
+        'PORT': env("DB_PORT"),
     }
 }
 
@@ -143,11 +154,22 @@ REST_FRAMEWORK = {
 }
 
 # Configuración específica de los tokens JWT
-from datetime import timedelta
-
 SIMPLE_JWT = {
     # Vida útil del access token: corta, como charlamos.
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
     # Vida útil del refresh token: más larga.
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
 }
+
+# Configuración de Celery
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://redis:6379/0")
+CELERY_RESULT_BACKEND = env("CELERY_BROKER_URL", default="redis://redis:6379/0")
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_TIMEZONE = TIME_ZONE
+
+# Backend de email: por ahora, en desarrollo, mandamos los emails
+# a la CONSOLA (aparecen como texto en los logs) en vez de enviarlos
+# de verdad. Así podemos probar todo el flujo sin necesitar una
+# cuenta de email real configurada.
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
