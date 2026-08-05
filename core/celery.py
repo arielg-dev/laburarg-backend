@@ -21,3 +21,4 @@ app.config_from_object("django.conf:settings", namespace="CELERY")
 # que esté en INSTALLED_APPS, y registra las tareas que encuentre
 # ahí. Así no hay que registrar cada tarea a mano una por una.
 app.autodiscover_tasks()
+

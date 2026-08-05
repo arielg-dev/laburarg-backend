@@ -2,6 +2,7 @@ from rest_framework import generics
 from rest_framework.permissions import AllowAny
 
 from .serializers import RegisterSerializer
+from .tasks import send_welcome_email
 
 
 class RegisterView(generics.CreateAPIView):
@@ -10,16 +11,18 @@ class RegisterView(generics.CreateAPIView):
 
     CreateAPIView es una vista genérica de DRF que expone
     ÚNICAMENTE la acción de crear (a diferencia de ModelViewSet,
-    que trae las 5 operaciones CRUD completas). Tiene sentido acá:
-    no existe "listar todos los registros" como concepto de
-    negocio, solo "crear una cuenta nueva".
+    que trae las 5 operaciones CRUD completas).
     """
 
     serializer_class = RegisterSerializer
-
-    # AllowAny: a diferencia de CVViewSet o ApplicationViewSet,
-    # este endpoint tiene que ser accesible SIN estar logueado --
-    # tiene sentido, nadie puede loguearse antes de tener una
-    # cuenta. Lo hacemos explícito para que quede claro que es una
-    # decisión consciente, no un permiso que nos olvidamos de poner.
     permission_classes = [AllowAny]
+
+    def perform_create(self, serializer):
+        user = serializer.save()
+        # .delay() es la forma más simple de "encolar" una tarea:
+        # en vez de ejecutar send_welcome_email() directamente
+        # (lo cual bloquearía este pedido HTTP hasta que el email
+        # termine de mandarse), .delay() la manda a la cola de
+        # Redis y sigue de largo INMEDIATAMENTE. El worker de
+        # Celery la va a tomar y ejecutar por su cuenta, en paralelo.
+        send_welcome_email.delay(user.id)

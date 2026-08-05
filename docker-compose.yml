@@ -12,9 +12,6 @@ services:
       - mysql_data:/var/lib/mysql
     ports:
       - "3307:3306"
-    # healthcheck: un comando que Docker ejecuta periódicamente
-    # DENTRO del contenedor, para determinar si el servicio ya
-    # está realmente operativo (no solo "el proceso existe").
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}"]
       interval: 5s
@@ -44,9 +41,23 @@ services:
     env_file:
       - .env
     depends_on:
-      # Esperamos a que el healthcheck de "db" confirme "healthy"
-      # (MySQL realmente aceptando conexiones), no solo a que el
-      # contenedor exista.
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  # ---- Worker de Celery ----
+  celery:
+    build: .
+    restart: unless-stopped
+    command: celery -A core worker -l info
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=db
+    depends_on:
       db:
         condition: service_healthy
       redis:
