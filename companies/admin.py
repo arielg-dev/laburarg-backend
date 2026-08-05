@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Company, CompanyMember
+from .models import Company, CompanyMember, Subscription
 
 
 class CompanyMemberInline(admin.TabularInline):
@@ -56,3 +56,8 @@ class CompanyMemberAdmin(admin.ModelAdmin):
         "user__username",
         "company__name",
     )
+
+@admin.register(Subscription)
+class SubscriptionAdmin(admin.ModelAdmin):
+    list_display = ("company", "plan", "is_active", "started_at", "expires_at")
+    list_filter = ("plan", "is_active")

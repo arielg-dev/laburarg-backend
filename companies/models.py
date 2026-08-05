@@ -131,3 +131,63 @@ class CompanyMember(models.Model):
 
     def __str__(self):
         return f"{self.user} — {self.company} ({self.get_role_display()})"
+
+class Subscription(models.Model):
+    """
+    Representa el plan de suscripción activo de una empresa.
+
+    Cada Company tiene A LO SUMO una Subscription activa a la vez
+    (relación 1 a 1). Si una empresa no tiene ninguna fila acá,
+    se la considera automáticamente en el plan gratuito por
+    defecto -- no hace falta crear una fila "Free" para cada
+    empresa nueva.
+    """
+
+    class Plan(models.TextChoices):
+        FREE = "free", "Gratuito"
+        PRO = "pro", "Profesional"
+        AGENCY = "agency", "Consultora/Agencia"
+
+    # OneToOneField: a diferencia de ForeignKey (donde muchas filas
+    # de esta tabla podrían apuntar a la misma Company), OneToOne
+    # obliga a que cada Company tenga COMO MÁXIMO una Subscription.
+    # Es el tipo de relación 1 a 1 que mencionamos como posible
+    # allá al principio, cuando armamos el diagrama.
+    company = models.OneToOneField(
+        Company,
+        on_delete=models.CASCADE,
+        related_name="subscription",
+    )
+
+    plan = models.CharField(
+        max_length=10,
+        choices=Plan.choices,
+        default=Plan.FREE,
+    )
+
+    # Si is_active=False, tratamos a la empresa como si no tuviera
+    # suscripción paga, aunque el campo "plan" diga otra cosa --
+    # útil para pagos vencidos, cancelaciones, etc., sin necesidad
+    # de borrar el historial.
+    is_active = models.BooleanField(default=True)
+
+    started_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Suscripción"
+        verbose_name_plural = "Suscripciones"
+
+    def __str__(self):
+        return f"{self.company} — {self.get_plan_display()}"
+
+    @property
+    def has_unlimited_jobs(self):
+        """
+        Devuelve True si esta suscripción permite publicar
+        búsquedas sin límite mensual (planes pagos activos).
+        """
+        return self.is_active and self.plan in (
+            self.Plan.PRO,
+            self.Plan.AGENCY,
+        )
