@@ -14,13 +14,14 @@ from rest_framework_simplejwt.views import (
 from accounts.views import RegisterView
 from companies.views import CompanyViewSet
 from jobs.views import JobViewSet
-from cvs.views import CVViewSet
+from cvs.views import CVViewSet, CandidateSearchViewSet
 from applications.views import ApplicationViewSet, FavoriteViewSet
 
 router = DefaultRouter()
 router.register(r"companies", CompanyViewSet, basename="company")
 router.register(r"jobs", JobViewSet, basename="job")
 router.register(r"cvs", CVViewSet, basename="cv")
+router.register(r"candidates", CandidateSearchViewSet, basename="candidate")
 router.register(r"applications", ApplicationViewSet, basename="application")
 router.register(r"favorites", FavoriteViewSet, basename="favorite")
 

@@ -191,3 +191,15 @@ class Subscription(models.Model):
             self.Plan.PRO,
             self.Plan.AGENCY,
         )
+
+    @property
+    def has_cv_database_access(self):
+        """
+        Devuelve True si esta suscripción permite buscar y ver
+        libremente la base de CVs de candidatos (beneficio de
+        planes pagos, no del plan gratuito).
+        """
+        return self.is_active and self.plan in (
+            self.Plan.PRO,
+            self.Plan.AGENCY,
+        )
